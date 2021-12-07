@@ -48,7 +48,6 @@ class AccountRepositoryTest {
         //when
         Account account = accountRepository.save(givenAccount);
 
-
         //then
         assertNotNull(account.getId());
     }
