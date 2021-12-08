@@ -1,7 +1,6 @@
 package newbee.jsh.security_jwt.config.jwt;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Date;
 
