@@ -3,18 +3,26 @@ package newbee.jsh.security_jwt.config.jwt;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
+import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import newbee.jsh.security_jwt.account.entity.Account;
+import newbee.jsh.security_jwt.account.entity.Role;
 import newbee.jsh.security_jwt.account.service.AccountService;
 
 @Component
@@ -62,16 +70,61 @@ public class JwtProvider {
                     .compact();
     }
 
-    //tokenDateValid
+    //get Claims
+    public Jws<Claims> getClaims(final String jwt){
+        return Jwts.parserBuilder()
+                    .requireAudience(JwtAuthConstatns.TOKEN_AUDIENCE)
+                    .setSigningKey(key)
+                    .build().parseClaimsJws(jwt);
+    }
+
+    //get Subject to Claims
+    public String getSubject(final String jwt){
+        return getClaims(jwt).getBody().getSubject();
+    }
+
+    //accessTokenDateValid
+    public boolean dateValid(final String jwt){
+        try{    
+            Jws<Claims> claims = getClaims(jwt.trim());
+            return !claims.getBody().getExpiration().before(new Date());
+        }catch(Exception e){
+            return false;
+        }
+    }
 
     //checkBlackListToken
 
-    //get request Header Jwt
+    //refreshTokenValudValid
+    public boolean refreshokenValueValid(final String refreshToken, final String value){
+        if(getSubject(refreshToken).equals(value)){
+            return true;
+        }
+        return false;
+    }
 
-    //get Claims
+    //get request Header Jwt
+    public String resolveJwt(final HttpServletRequest request){
+        final String header = request.getHeader(JwtAuthConstatns.AUTH_HEADER);
+
+        if(header != null && header.startsWith(JwtAuthConstatns.AUTH_HEADER)){
+            return header.split(" ")[1]; //AUTH_HEADER 제거
+        }
+        return null;
+    }
 
     //create usernamePasswordAuthenticationToken
+    public Authentication getAuthentication(final String jwt){
+        final Account account = accountService.getAccount(String.valueOf(getSubject(jwt)));
+        
+        return new UsernamePasswordAuthenticationToken(account, "", account.getRoles().stream()
+                                                                                        .map(Role::getValue)
+                                                                                        .map(SimpleGrantedAuthority::new)
+                                                                                        .collect(Collectors.toList()));
+    }
 
-    //get Subject to Claims
+
+
+    
     
 }
