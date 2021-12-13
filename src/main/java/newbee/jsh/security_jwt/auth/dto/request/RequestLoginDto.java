@@ -1,4 +1,4 @@
-package newbee.jsh.security_jwt.account.dto.request;
+package newbee.jsh.security_jwt.auth.dto.request;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 @ToString
-public class RequestAccountLoginDto {
+public class RequestLoginDto {
 
     private String email;
     private String password;

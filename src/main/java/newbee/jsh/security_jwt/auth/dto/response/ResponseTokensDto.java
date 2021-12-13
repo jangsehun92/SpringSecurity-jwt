@@ -1,4 +1,4 @@
-package newbee.jsh.security_jwt.account.dto.response;
+package newbee.jsh.security_jwt.auth.dto.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
