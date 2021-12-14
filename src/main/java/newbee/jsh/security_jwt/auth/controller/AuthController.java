@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import newbee.jsh.security_jwt.auth.dto.request.RequestJwtReissuanceDto;
 import newbee.jsh.security_jwt.auth.dto.request.RequestLoginDto;
+import newbee.jsh.security_jwt.auth.dto.response.ResponseAccessTokenDto;
 import newbee.jsh.security_jwt.auth.dto.response.ResponseTokensDto;
 import newbee.jsh.security_jwt.auth.service.AuthService;
 
@@ -27,5 +29,13 @@ public class AuthController {
         log.info("POST /api/auth/login {}", dto.toString());
         return new ResponseEntity<>(authService.login(dto), HttpStatus.OK);
     }
+
+    //accessToken 재발급
+    @PostMapping(value="/auth/jwt/reissuance")
+    public ResponseEntity<ResponseAccessTokenDto> postMethodName(@RequestBody RequestJwtReissuanceDto dto) {
+        log.info("POST /api/auth/jwt/reissuance {}", dto.toString());
+        return new ResponseEntity<>(authService.jwtReissuance(dto), HttpStatus.OK);
+    }
+    
     
 }
