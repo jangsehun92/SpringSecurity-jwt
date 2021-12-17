@@ -31,7 +31,7 @@ public class AuthController {
     }
 
     //accessToken 재발급
-    @PostMapping(value="/auth/jwt/reissuance")
+    @PostMapping(value="/auth/reissuance")
     public ResponseEntity<ResponseAccessTokenDto> postMethodName(@RequestBody RequestJwtReissuanceDto dto) {
         log.info("POST /api/auth/jwt/reissuance {}", dto.toString());
         return new ResponseEntity<>(authService.jwtReissuance(dto), HttpStatus.OK);

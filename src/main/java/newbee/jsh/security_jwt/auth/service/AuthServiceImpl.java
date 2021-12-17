@@ -1,5 +1,6 @@
 package newbee.jsh.security_jwt.auth.service;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import newbee.jsh.security_jwt.config.jwt.JwtProvider;
 public class AuthServiceImpl implements AuthService {
 
     private final JwtProvider jwtProvider;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AuthRepository authRepository;
 
     @Override

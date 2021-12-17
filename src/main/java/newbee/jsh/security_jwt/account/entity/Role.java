@@ -21,7 +21,7 @@ import lombok.ToString;
 @ToString
 public class Role {
 
-    private final static String ROLE_PREFIX = "ROLE_";
+    private static final String ROLE_PREFIX = "ROLE_";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

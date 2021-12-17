@@ -9,6 +9,8 @@ public interface AuthService {
 
     //로그인
     public ResponseTokensDto login(final RequestLoginDto dto);
+
+    //로그아웃
     
     //accessToken 재발급
     public ResponseAccessTokenDto jwtReissuance(final RequestJwtReissuanceDto dto);

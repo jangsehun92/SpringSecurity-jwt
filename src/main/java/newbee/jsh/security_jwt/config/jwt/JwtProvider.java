@@ -2,7 +2,6 @@ package newbee.jsh.security_jwt.config.jwt;
 
 import java.time.Duration;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
@@ -10,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -19,10 +17,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
-import newbee.jsh.security_jwt.account.entity.Account;
-import newbee.jsh.security_jwt.account.entity.Role;
-import newbee.jsh.security_jwt.account.service.AccountService;
 import newbee.jsh.security_jwt.auth.repository.AuthBlackListRepository;
+import newbee.jsh.security_jwt.config.CustomUserDetails;
+import newbee.jsh.security_jwt.config.CustomUserDetailsService;
 
 @Component
 @RequiredArgsConstructor
@@ -30,7 +27,7 @@ public class JwtProvider {
 
     private SecretKey key;
 
-    private final AccountService accountService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     private final AuthBlackListRepository authBlackListRepository;
 
@@ -128,12 +125,8 @@ public class JwtProvider {
 
     //create usernamePasswordAuthenticationToken
     public Authentication getAuthentication(final String jwt){
-        final Account account = accountService.getAccount(String.valueOf(getSubject(jwt)));
-        
-        return new UsernamePasswordAuthenticationToken(account, "", account.getRoles().stream()
-                                                                                        .map(Role::getValue)
-                                                                                        .map(SimpleGrantedAuthority::new)
-                                                                                        .collect(Collectors.toList()));
+        final CustomUserDetails customUserDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(String.valueOf(getSubject(jwt)));
+        return new UsernamePasswordAuthenticationToken(customUserDetails.getEmail(), "", customUserDetails.getAuthorities());
     }
 
 }

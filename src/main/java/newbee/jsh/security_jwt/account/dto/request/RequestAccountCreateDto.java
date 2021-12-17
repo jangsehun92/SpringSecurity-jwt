@@ -12,5 +12,5 @@ public class RequestAccountCreateDto {
 
     private String email;
     private String password;
-    
+    private String roleValue;
 }
