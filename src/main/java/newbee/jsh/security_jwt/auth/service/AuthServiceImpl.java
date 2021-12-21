@@ -1,5 +1,6 @@
 package newbee.jsh.security_jwt.auth.service;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -62,6 +63,15 @@ public class AuthServiceImpl implements AuthService {
         authRepository.save(Auth.builder()
                                 .email(email)
                                 .refreshTokenValue(refreshTokenValue).build());
+    }
+
+    @Transactional
+    @Override
+    public void logout(final HttpServletRequest request){
+        final String accessToken = jwtProvider.resolveJwt(request);
+
+        final String email = jwtProvider.getSubject(accessToken);
+        
     }
 
     @Transactional
