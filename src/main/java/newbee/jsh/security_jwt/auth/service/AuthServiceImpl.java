@@ -14,6 +14,7 @@ import newbee.jsh.security_jwt.auth.dto.request.RequestLoginDto;
 import newbee.jsh.security_jwt.auth.dto.response.ResponseAccessTokenDto;
 import newbee.jsh.security_jwt.auth.dto.response.ResponseTokensDto;
 import newbee.jsh.security_jwt.auth.entity.Auth;
+import newbee.jsh.security_jwt.auth.entity.AuthBlackList;
 import newbee.jsh.security_jwt.auth.exception.AccountNotFoundException;
 import newbee.jsh.security_jwt.auth.exception.AccountPasswordNotMatchException;
 import newbee.jsh.security_jwt.auth.repository.AuthBlackListRepository;
@@ -71,7 +72,10 @@ public class AuthServiceImpl implements AuthService {
         final String accessToken = jwtProvider.resolveJwt(request);
 
         final String email = jwtProvider.getSubject(accessToken);
-        
+
+        authBlackListRepository.save(AuthBlackList.builder()
+                                                    .email(email)
+                                                    .accessToken(accessToken).build());
     }
 
     @Transactional
