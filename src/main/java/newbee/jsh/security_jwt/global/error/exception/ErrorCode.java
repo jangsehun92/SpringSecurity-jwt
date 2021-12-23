@@ -13,7 +13,13 @@ public enum ErrorCode {
     //ACCOUNT
 	EMAIL_ALREADY_USED(400, "A002", " 중복된 이메일 입니다."),
 	PASSWORD_NOT_MATCH(400, "A003", " 이메일 또는 비밀번호가 다릅니다."),
-	ACCOUNT_NOT_FOUND(400, "A004", " 계정을 찾을 수 없습니다.");
+	ACCOUNT_NOT_FOUND(400, "A004", " 계정을 찾을 수 없습니다."),
+
+	//JWT
+	JWT_NOT_FOUND(400, "J001", "JWT NOT FOUND"),
+
+	//Auth
+	AUTH_NOT_FOUND(400, "AA001", "AUTH NOT FOUND");
 
     private int status;
 	private String code;

@@ -6,6 +6,7 @@ import javax.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import newbee.jsh.security_jwt.account.entity.Account;
 import newbee.jsh.security_jwt.account.repository.AccountRepository;
@@ -17,6 +18,8 @@ import newbee.jsh.security_jwt.auth.entity.Auth;
 import newbee.jsh.security_jwt.auth.entity.AuthBlackList;
 import newbee.jsh.security_jwt.auth.exception.AccountNotFoundException;
 import newbee.jsh.security_jwt.auth.exception.AccountPasswordNotMatchException;
+import newbee.jsh.security_jwt.auth.exception.AuthNotFoundException;
+import newbee.jsh.security_jwt.auth.exception.JwtNotFoundException;
 import newbee.jsh.security_jwt.auth.repository.AuthBlackListRepository;
 import newbee.jsh.security_jwt.auth.repository.AuthRepository;
 import newbee.jsh.security_jwt.config.jwt.JwtProvider;
@@ -29,8 +32,8 @@ public class AuthServiceImpl implements AuthService {
     private final JwtProvider jwtProvider;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AccountRepository accountRepository;
-    private final AuthRepository authRepository;
-    private final AuthBlackListRepository authBlackListRepository;
+    private final AuthRepository authRepository; //accessToken 재발급 관련 정보 repository
+    private final AuthBlackListRepository authBlackListRepository; // accessToken blackList repository
 
     @Transactional
     @Override
@@ -43,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
         final String accessToken = jwtProvider.createAccessToken(account.getEmail());
         final String refreshToken = jwtProvider.createRefreshToken(refreshTokenValue);
 
-        saveRefreshTokenValue(account.getEmail(), refreshTokenValue);
+        saveAuth(account.getEmail(), refreshTokenValue);
 
         return ResponseTokensDto.builder()
                                 .accessToken(accessToken)
@@ -60,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    private void saveRefreshTokenValue(final String email, final String refreshTokenValue){
+    private void saveAuth(final String email, final String refreshTokenValue){
         authRepository.save(Auth.builder()
                                 .email(email)
                                 .refreshTokenValue(refreshTokenValue).build());
@@ -71,16 +74,34 @@ public class AuthServiceImpl implements AuthService {
     public void logout(final HttpServletRequest request){
         final String accessToken = jwtProvider.resolveJwt(request);
 
+        if(accessToken == null){ 
+            throw new JwtNotFoundException(); 
+        }
+
         final String email = jwtProvider.getSubject(accessToken);
 
+        authRepository.delete(getAuth(email));
         authBlackListRepository.save(AuthBlackList.builder()
                                                     .email(email)
                                                     .accessToken(accessToken).build());
     }
 
+    private Auth getAuth(final String email){
+        return authRepository.findById(email).orElseThrow(AuthNotFoundException::new);
+    }
+
     @Transactional
     @Override
     public ResponseAccessTokenDto jwtReissuance(RequestJwtReissuanceDto dto) {
+        //1. tokens null check
+
+        //2. accessToken 에서 email 추출 (만료 체크 안함)
+
+        //3. accessToken 만료 시 해당 Exception에서 email(subject) 추출
+
+        //4. 해당 email로 auth 정보 조회
+        
+        //5. 비교 후 accessToken 재생성 후 return
         return null;
     }
     
