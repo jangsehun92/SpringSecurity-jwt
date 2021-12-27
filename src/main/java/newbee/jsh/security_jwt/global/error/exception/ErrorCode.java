@@ -17,6 +17,7 @@ public enum ErrorCode {
 
 	//JWT
 	JWT_NOT_FOUND(400, "J001", "JWT NOT FOUND"),
+	JWT_VERIFICATION_FAILD(400, "J002", "JWT RefreshToken 검증 실패"),
 
 	//Auth
 	AUTH_NOT_FOUND(400, "AA001", "AUTH NOT FOUND");

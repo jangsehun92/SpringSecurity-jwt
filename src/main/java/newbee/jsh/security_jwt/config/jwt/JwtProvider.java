@@ -106,7 +106,7 @@ public class JwtProvider {
     }
 
     //refreshTokenValudValid
-    public boolean refreshokenValueValid(final String refreshToken, final String value){
+    public boolean refreshTokenValueValid(final String refreshToken, final String value){
         if(getSubject(refreshToken).equals(value)){
             return true;
         }

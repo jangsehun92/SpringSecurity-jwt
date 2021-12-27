@@ -5,8 +5,9 @@ import javax.transaction.Transactional;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import newbee.jsh.security_jwt.account.entity.Account;
 import newbee.jsh.security_jwt.account.repository.AccountRepository;
@@ -20,6 +21,7 @@ import newbee.jsh.security_jwt.auth.exception.AccountNotFoundException;
 import newbee.jsh.security_jwt.auth.exception.AccountPasswordNotMatchException;
 import newbee.jsh.security_jwt.auth.exception.AuthNotFoundException;
 import newbee.jsh.security_jwt.auth.exception.JwtNotFoundException;
+import newbee.jsh.security_jwt.auth.exception.JwtVerificationException;
 import newbee.jsh.security_jwt.auth.repository.AuthBlackListRepository;
 import newbee.jsh.security_jwt.auth.repository.AuthRepository;
 import newbee.jsh.security_jwt.config.jwt.JwtProvider;
@@ -94,15 +96,34 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ResponseAccessTokenDto jwtReissuance(RequestJwtReissuanceDto dto) {
         //1. tokens null check
+        if(!StringUtils.hasText(dto.getAccessToken()) || !StringUtils.hasText(dto.getRefreshToken())){
+            throw new JwtNotFoundException();
+        }
 
-        //2. accessToken 에서 email 추출 (만료 체크 안함)
+        String email = null;
 
-        //3. accessToken 만료 시 해당 Exception에서 email(subject) 추출
+        try {
+            //2. accessToken 에서 email 추출 
+            email = jwtProvider.getSubject(dto.getAccessToken()); 
+        } catch (ExpiredJwtException e) {
+            //3. accessToken 만료 시 해당 Exception에서 email(subject) 추출
+            email = e.getClaims().getSubject();
+        }
 
-        //4. 해당 email로 auth 정보 조회
-        
-        //5. 비교 후 accessToken 재생성 후 return
-        return null;
+        //4. 해당 email로 계정 정보 가져오기
+        final Account account = accountRepository.findByEmail(email).orElseThrow(AccountNotFoundException::new);
+
+        //5. 해당 email로 auth 정보 조회
+        final Auth auth = authRepository.findById(email).orElseThrow(AuthNotFoundException::new);
+      
+        //6. refreshToken 비교
+        if(!jwtProvider.refreshTokenValueValid(dto.getRefreshToken(), auth.getRefreshTokenValue())){
+            throw new JwtVerificationException();
+        }
+
+        //7. accessToken return
+        return ResponseAccessTokenDto.builder()
+                                    .accessToken(jwtProvider.createAccessToken(account.getEmail())).build();
     }
     
 }
