@@ -19,6 +19,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import newbee.jsh.security_jwt.account.dto.response.ResponseAccountDto;
 
 @Table
 @Entity
@@ -48,5 +49,11 @@ public class Account {
     )
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
+
+    public ResponseAccountDto toResponseAccountDto(){
+        return ResponseAccountDto.builder()
+                                .email(this.email)
+                                .roles(this.roles).build();
+    }
     
 }

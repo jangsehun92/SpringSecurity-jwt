@@ -3,9 +3,9 @@ package newbee.jsh.security_jwt.account.exception;
 import newbee.jsh.security_jwt.global.error.exception.BusinessException;
 import newbee.jsh.security_jwt.global.error.exception.ErrorCode;
 
-public class EmailAlreadUsedException extends BusinessException {
+public class EmailAlreadyUsedException extends BusinessException {
 
-    public EmailAlreadUsedException() {
+    public EmailAlreadyUsedException() {
         super(ErrorCode.EMAIL_ALREADY_USED);
     }
     
