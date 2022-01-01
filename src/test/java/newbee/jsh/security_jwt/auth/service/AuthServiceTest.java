@@ -148,5 +148,20 @@ public class AuthServiceTest {
         then(authRepository).should(times(1)).save(any(Auth.class));
         System.out.println(responseTokensDto.toString());
     }
+
+    @Test
+    @DisplayName("accessToken을 찾을 수 없어서 로그아웃 실패")
+    void logoutFailByJwtNotFound() throws Exception{
+        
+    }
+
+    @Test
+    @DisplayName("Auth를 찾을 수 없어서 로그아웃 실패") 
+    //로그인에 성공하면 AccessToken을 재발급 받을 수 있는 RefreshValue를 Auth로 저장한다.
+    void logoutFailByAuthNotFound() throws Exception{
+        
+    }
+
+    
     
 }

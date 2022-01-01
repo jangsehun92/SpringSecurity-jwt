@@ -102,7 +102,7 @@ class AccountServiceTest {
     }
 
     @Test
-    @DisplayName("계정을 찾을 수 없어서 실패")
+    @DisplayName("계정을 찾을 수 없어서 계정 가져오기 실패")
     void getAccountFailByNotFoundAccount() throws Exception{
         //given
         given(accountRepository.findByEmail(anyString())).willReturn(Optional.empty());
