@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import net.minidev.json.JSONObject;
@@ -27,11 +28,15 @@ import newbee.jsh.security_jwt.account.repository.AccountRepository;
 import newbee.jsh.security_jwt.auth.dto.request.RequestLoginDto;
 import newbee.jsh.security_jwt.auth.dto.response.ResponseTokensDto;
 import newbee.jsh.security_jwt.auth.entity.Auth;
+import newbee.jsh.security_jwt.auth.entity.AuthBlackList;
 import newbee.jsh.security_jwt.auth.exception.AccountNotFoundException;
 import newbee.jsh.security_jwt.auth.exception.AccountPasswordNotMatchException;
+import newbee.jsh.security_jwt.auth.exception.AuthNotFoundException;
+import newbee.jsh.security_jwt.auth.exception.JwtNotFoundException;
 import newbee.jsh.security_jwt.auth.repository.AuthBlackListRepository;
 import newbee.jsh.security_jwt.auth.repository.AuthRepository;
 import newbee.jsh.security_jwt.config.CustomUserDetailsService;
+import newbee.jsh.security_jwt.config.jwt.JwtAuthConstatns;
 import newbee.jsh.security_jwt.config.jwt.JwtProvider;
 
 @ExtendWith(MockitoExtension.class)
@@ -152,16 +157,63 @@ public class AuthServiceTest {
     @Test
     @DisplayName("accessToken을 찾을 수 없어서 로그아웃 실패")
     void logoutFailByJwtNotFound() throws Exception{
-        
+        //given
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.addHeader(JwtAuthConstatns.AUTH_HEADER, "");
+
+        //when
+        final Exception exception = assertThrows(Exception.class, ()->{
+            authService.logout(request);
+        });
+
+        //then
+        assertEquals(exception.getClass(), JwtNotFoundException.class);
     }
 
     @Test
     @DisplayName("Auth를 찾을 수 없어서 로그아웃 실패") 
     //로그인에 성공하면 AccessToken을 재발급 받을 수 있는 RefreshValue를 Auth로 저장한다.
     void logoutFailByAuthNotFound() throws Exception{
-        
+        //given
+        final String accessToken = jwtProvider.createAccessToken("test@email.com");
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.addHeader(JwtAuthConstatns.AUTH_HEADER, "BEARER " + accessToken);
+
+        given(authRepository.findById(anyString())).willReturn(Optional.empty());
+
+        //when
+        final Exception exception = assertThrows(Exception.class, ()->{
+            authService.logout(request);
+        });
+
+        //then
+        assertEquals(exception.getClass(), AuthNotFoundException.class);
     }
 
+    @Test
+    @DisplayName("로그아웃 성공") 
+    void logout() throws Exception{
+        //given
+        final String accessToken = jwtProvider.createAccessToken("test@email.com");
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.addHeader(JwtAuthConstatns.AUTH_HEADER, "BEARER " + accessToken);
+
+        given(authRepository.findById(anyString())).willReturn(Optional.of(Auth.builder().build()));
+
+        //when
+        authService.logout(request);
+
+        //then
+        then(authRepository).should(times(1)).delete(any(Auth.class));
+        then(authBlackListRepository).should(times(1)).save(any(AuthBlackList.class));
+    }
+
+    
     
     
 }
