@@ -25,7 +25,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import net.minidev.json.JSONObject;
 import newbee.jsh.security_jwt.account.entity.Account;
 import newbee.jsh.security_jwt.account.repository.AccountRepository;
+import newbee.jsh.security_jwt.auth.dto.request.RequestJwtReissuanceDto;
 import newbee.jsh.security_jwt.auth.dto.request.RequestLoginDto;
+import newbee.jsh.security_jwt.auth.dto.response.ResponseAccessTokenDto;
 import newbee.jsh.security_jwt.auth.dto.response.ResponseTokensDto;
 import newbee.jsh.security_jwt.auth.entity.Auth;
 import newbee.jsh.security_jwt.auth.entity.AuthBlackList;
@@ -33,6 +35,7 @@ import newbee.jsh.security_jwt.auth.exception.AccountNotFoundException;
 import newbee.jsh.security_jwt.auth.exception.AccountPasswordNotMatchException;
 import newbee.jsh.security_jwt.auth.exception.AuthNotFoundException;
 import newbee.jsh.security_jwt.auth.exception.JwtNotFoundException;
+import newbee.jsh.security_jwt.auth.exception.JwtVerificationException;
 import newbee.jsh.security_jwt.auth.repository.AuthBlackListRepository;
 import newbee.jsh.security_jwt.auth.repository.AuthRepository;
 import newbee.jsh.security_jwt.config.CustomUserDetailsService;
@@ -213,7 +216,124 @@ public class AuthServiceTest {
         then(authBlackListRepository).should(times(1)).save(any(AuthBlackList.class));
     }
 
-    
-    
+    @Test
+    @DisplayName("token null로 인한 accessToken 재발급 실패")
+    void jwtReissuanceFailByTokensNull() throws Exception{
+        //given
+        final String accessToken = "";
+        final String refreshToken = "";
+
+        jsonObject.put("accessToken", accessToken);
+        jsonObject.put("refreshToken", refreshToken);
+
+        final RequestJwtReissuanceDto dto = objectMapper.readValue(jsonObject.toString(), RequestJwtReissuanceDto.class);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.addHeader(JwtAuthConstatns.AUTH_HEADER, "BEARER " + accessToken);
+
+        //when
+        final Exception exception = assertThrows(Exception.class, ()->{
+            authService.jwtReissuance(dto);
+        });
+
+        //then
+        assertEquals(exception.getClass(), JwtNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("회원을 찾을 수 없어 accessToken 재발급 실패")
+    void jwtReissuanceFailByAccountNotFound() throws Exception{
+        //given
+        final String email = "test@email.com";
+        final String accessToken = jwtProvider.createAccessToken(email);
+        final String refreshToken = jwtProvider.createRefreshToken("value");
+
+        jsonObject.put("accessToken", accessToken);
+        jsonObject.put("refreshToken", refreshToken);
+
+        final RequestJwtReissuanceDto dto = objectMapper.readValue(jsonObject.toString(), RequestJwtReissuanceDto.class);
+
+        given(accountRepository.findByEmail(email)).willReturn(Optional.empty());
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.addHeader(JwtAuthConstatns.AUTH_HEADER, "BEARER " + accessToken);
+
+        //when
+        final Exception exception = assertThrows(Exception.class, ()->{
+            authService.jwtReissuance(dto);
+        });
+
+        //then
+        assertEquals(exception.getClass(), AccountNotFoundException.class);
+        then(accountRepository).should(times(1)).findByEmail(anyString());
+    }
+
+    @Test
+    @DisplayName("refreshToken value valid에 실패하여 accessToken 재발급 실패")
+    void jwtReissuanceFailByAuthNotFound() throws Exception{
+        //given
+        final String email = "test@email.com";
+        final String accessToken = jwtProvider.createAccessToken(email);
+        final String refreshToken = jwtProvider.createRefreshToken("value");
+
+        jsonObject.put("accessToken", accessToken);
+        jsonObject.put("refreshToken", refreshToken);
+
+        final RequestJwtReissuanceDto dto = objectMapper.readValue(jsonObject.toString(), RequestJwtReissuanceDto.class);
+
+        given(accountRepository.findByEmail(email)).willReturn(Optional.of(Account.builder().build()));
+        given(authRepository.findById(email)).willReturn(Optional.of(Auth.builder()
+                                                                        .email(email)
+                                                                        .refreshTokenValue("test")
+                                                                        .build()));
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.addHeader(JwtAuthConstatns.AUTH_HEADER, "BEARER " + accessToken);
+
+        //when
+        final Exception exception = assertThrows(Exception.class, ()->{
+            authService.jwtReissuance(dto);
+        });
+
+        //then
+        assertEquals(exception.getClass(), JwtVerificationException.class);
+        then(accountRepository).should(times(1)).findByEmail(anyString());
+        then(authRepository).should(times(1)).findById(anyString());
+    }
+
+    @Test
+    @DisplayName("accessToken 재발급 성공")
+    void jwtReissuance() throws Exception{
+        //given
+        final String email = "test@email.com";
+        final String accessToken = jwtProvider.createAccessToken(email);
+        final String refreshToken = jwtProvider.createRefreshToken("value");
+
+        jsonObject.put("accessToken", accessToken);
+        jsonObject.put("refreshToken", refreshToken);
+
+        final RequestJwtReissuanceDto dto = objectMapper.readValue(jsonObject.toString(), RequestJwtReissuanceDto.class);
+
+        given(accountRepository.findByEmail(email)).willReturn(Optional.of(Account.builder().build()));
+        given(authRepository.findById(email)).willReturn(Optional.of(Auth.builder()
+                                                                        .email(email)
+                                                                        .refreshTokenValue("value")
+                                                                        .build()));
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.addHeader(JwtAuthConstatns.AUTH_HEADER, "BEARER " + accessToken);
+
+        //when
+        final ResponseAccessTokenDto responseAccessTokenDto = authService.jwtReissuance(dto);
+
+        //then
+        assertEquals(false, responseAccessTokenDto.getAccessToken().isEmpty());
+        then(accountRepository).should(times(1)).findByEmail(anyString());
+        then(authRepository).should(times(1)).findById(anyString());
+    }
     
 }

@@ -46,7 +46,7 @@ public class JwtProvider {
          * claims()의 get("key")를 통해 접근할 수 있을 것으로 예상한다. UNIT TEST 필요 
          */
         final Date regDate = new Date();
-        final Date expirationDate = new Date(regDate.getTime() + Duration.ofMinutes(30).toMillis());
+        final Date expirationDate = new Date(regDate.getTime() + Duration.ofMinutes(30L).toMillis());
 
         return Jwts.builder()
                     .setClaims(claims)
@@ -61,7 +61,7 @@ public class JwtProvider {
     public String createRefreshToken(final String value){
         final Claims claims = Jwts.claims().setSubject(value);
         final Date regDate = new Date();
-        final Date expirationDate = new Date(regDate.getTime() + Duration.ofDays(1).toMillis());
+        final Date expirationDate = new Date(regDate.getTime() + Duration.ofDays(1L).toMillis());
 
         return Jwts.builder()
                     .setClaims(claims)
@@ -98,19 +98,12 @@ public class JwtProvider {
     //checkBlackListToken
     public boolean isBlackList(final String accessToken){
         final String email = getSubject(accessToken);
-
-        if(authBlackListRepository.findByEmailAndAccessToken(email, accessToken) != null){
-            return true;
-        }
-        return false;
+        return authBlackListRepository.findByEmailAndAccessToken(email, accessToken) != null;
     }
 
     //refreshTokenValudValid
     public boolean refreshTokenValueValid(final String refreshToken, final String value){
-        if(getSubject(refreshToken).equals(value)){
-            return true;
-        }
-        return false;
+        return getSubject(refreshToken).equals(value);
     }
 
     //get request Header Jwt

@@ -115,7 +115,7 @@ public class AuthServiceImpl implements AuthService {
 
         //5. 해당 email로 auth 정보 조회
         final Auth auth = authRepository.findById(email).orElseThrow(AuthNotFoundException::new);
-      
+
         //6. refreshToken 비교
         if(!jwtProvider.refreshTokenValueValid(dto.getRefreshToken(), auth.getRefreshTokenValue())){
             throw new JwtVerificationException();
@@ -123,7 +123,8 @@ public class AuthServiceImpl implements AuthService {
 
         //7. accessToken return
         return ResponseAccessTokenDto.builder()
-                                    .accessToken(jwtProvider.createAccessToken(account.getEmail())).build();
+                                    .accessToken(jwtProvider.createAccessToken(account.getEmail()))
+                                    .build();
     }
     
 }
