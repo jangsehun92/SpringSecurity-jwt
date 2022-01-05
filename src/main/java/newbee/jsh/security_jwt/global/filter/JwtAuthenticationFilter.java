@@ -25,7 +25,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         //request에서 jwt을 꺼낸다
         final String accessToken = jwtProvider.resolveJwt(request);
-        System.out.println(accessToken);
         //만약 토큰이 null이 아니면서, JWT가 유효하다면 
         if(accessToken != null && jwtProvider.dateValid(accessToken) && !jwtProvider.isBlackList(accessToken)){
             //Authentication authentication 객체에 jwt를 이용하여 넣어준다.
